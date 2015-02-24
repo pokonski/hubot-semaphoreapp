@@ -61,6 +61,7 @@
 #   exalted
 
 SemaphoreApp = require './lib/app'
+FuzzySet = require 'fuzzyset.js'
 
 module.exports = (robot) ->
   if process.env.HUBOT_SEMAPHOREAPP_TRIGGER
@@ -92,8 +93,11 @@ module.exports = (robot) ->
           project = projects[0]
 
       unless project?
-        for x in projects
-          if x.name is projectName
+        names = (x.name for x in projects)
+        suggestions = FuzzySet(names).get(projectName)
+        if suggestions.length > 0
+          for x in projects
+            if x.name is suggestions[0][1]
               project = x
               break
 
