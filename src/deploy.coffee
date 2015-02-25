@@ -21,6 +21,7 @@
 #   ben
 
 SemaphoreApp = require './lib/app'
+FuzzySet = require 'fuzzyset.js'
 
 module.exports = (robot) ->
   unless process.env.HUBOT_SEMAPHOREAPP_DEPLOY?
@@ -49,7 +50,13 @@ module.exports = (robot) ->
 module.exports.deploy = (msg, project, branch, server) ->
   app = new SemaphoreApp(msg)
   app.getProjects (allProjects) ->
-    [project_obj] = (p for p in allProjects when p.name == project)
+    names = (x.name for x in allProjects)
+    suggestions = FuzzySet(names).get(project)
+    if suggestions.length > 0
+      for x in allProjects
+        if x.name is suggestions[0][1]
+          project_obj = x
+          break
     unless project_obj
       return msg.reply "Can't find project #{project}"
     [branch_obj] =  (b for b in project_obj.branches when b.branch_name == branch)
